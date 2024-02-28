@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://manicalab.sharepoint.com/sites/tmoZakazky/Verejne_zakazky/Forms/AllItems.aspx//", 
+      "customActions": {
+        "4aba33af-5fa2-439c-b6bf-4766ada7c3ff": {
+          "location": "ClientSideExtension.ApplicationCustomizer",
+          "properties": {
+            "testMessage": "Test message"
+          }
+        }
+      }
+    }
+  }
+}
