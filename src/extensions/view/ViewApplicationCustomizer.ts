@@ -1,9 +1,6 @@
-import {
-  BaseApplicationCustomizer
-} from '@microsoft/sp-application-base';
+import { BaseApplicationCustomizer } from '@microsoft/sp-application-base';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { IOpportunity } from '../../IOpportunity';
-
 
 export interface IViewApplicationCustomizerProperties {
   testMessage: string;
@@ -13,12 +10,27 @@ export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
+  private _counter: number = 1;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
 
-    
+    // Add event listener for location change
+    // window.addEventListener('navigate', this.renderCustomDiv.bind(this));
+
+    // Render the custom div
+    this.renderCustomDiv();
+
+    return Promise.resolve();
+  }
+
+  private renderCustomDiv(): void {
+    // Find URL, parse it and call the correct endpoint with REST API
+    // const url = window.location.href;
+    // const decodedUrl = decodeURIComponent(url);
+    // const parts = decodedUrl.split('/');
+    // const lastItem = parts[parts.length-1];
     
     // Make a GET request to fetch items from the "Temporary" list
     this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq 'D22_CZ-TMCZ~00Q3N000007AFRJUA4'`, SPHttpClient.configurations.v1)
@@ -48,22 +60,39 @@ export default class ViewApplicationCustomizer
           const garantName = usersData[2].Title;
           const legalName = usersData[3].Title;
 
-          // Display the dynamic content
-          const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
-          if (targetElement && (!document.getElementById('InjectedExtensionDiv'))) {
-            targetElement.insertAdjacentHTML('afterend', `
-              <div id="InjectedExtensionDiv">
-                <p>Title: ${data.Title}</p>
-                <p>Sfa Lead Id: ${data.sfaLeadId}</p>
-                <p>Sfa Customer: ${data.sfaCustomer}</p>
-                <p>Sfa Saler: ${salerName}</p>
-                <p>Sfa Manager: ${managerName}</p>
-                <p>Sfa Garant: ${garantName}</p>
-                <p>Sfa Legal: ${legalName}</p>
-              </div>
-            `);
+          // Create or update the dynamic content
+          let injectedDiv = document.getElementById('InjectedExtensionDiv');
+          if (!injectedDiv) {
+            // If the div doesn't exist, create a new one
+            const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
+            if (targetElement) {
+              targetElement.insertAdjacentHTML('afterend', `
+                <div id="InjectedExtensionDiv">
+                  <p>${this._counter++}</p>
+                  <p>Title: ${data.Title}</p>
+                  <p>Sfa Lead Id: ${data.sfaLeadId}</p>
+                  <p>Sfa Customer: ${data.sfaCustomer}</p>
+                  <p>Sfa Saler: ${salerName}</p>
+                  <p>Sfa Manager: ${managerName}</p>
+                  <p>Sfa Garant: ${garantName}</p>
+                  <p>Sfa Legal: ${legalName}</p>
+                </div>
+              `);
+            } else {
+              console.error("Target element not found.");
+            }
           } else {
-            console.error("Target element not found.");
+            // If the div exists, update its content
+            injectedDiv.innerHTML = `
+              <p>${this._counter++}</p>
+              <p>Title: ${data.Title}</p>
+              <p>Sfa Lead Id: ${data.sfaLeadId}</p>
+              <p>Sfa Customer: ${data.sfaCustomer}</p>
+              <p>Sfa Saler: ${salerName}</p>
+              <p>Sfa Manager: ${managerName}</p>
+              <p>Sfa Garant: ${garantName}</p>
+              <p>Sfa Legal: ${legalName}</p>
+            `;
           }
         })
         .catch((error: any) => {
@@ -73,8 +102,6 @@ export default class ViewApplicationCustomizer
       .catch((error: any) => {
         console.error(`Error: ${error}`);
       });
-    
-    return Promise.resolve();
   }
 
   // Method to fetch user information by ID
@@ -88,5 +115,11 @@ export default class ViewApplicationCustomizer
           return Promise.reject(response.statusText);
         }
       });
+  }
+
+  // Remove event listener on dispose
+  protected onDispose(): void {
+    window.removeEventListener('locationchange', this.renderCustomDiv);
+    super.onDispose();
   }
 }
