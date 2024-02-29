@@ -11,34 +11,33 @@ export default class ViewApplicationCustomizer
 
   private spHttpClient: SPHttpClient;
   private _counter: number = 1;
-  //private previousUrl: string;
+  private previousUrl: string;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
 
-     // Save the initial URL
-     //this.previousUrl = window.location.href;
+    // Save the initial URL
+    this.previousUrl = window.location.href;
 
-     // Start polling for URL changes
-     this.startUrlPolling();
+    // Start polling for URL changes
+    this.startUrlPolling();
  
-     // Render the custom div initially
-     this.renderCustomDiv();
+    // Render the custom div initially
+    this.renderCustomDiv();
  
-     return Promise.resolve();
+    return Promise.resolve();
   }
 
   private startUrlPolling(): void {
     setInterval(() => {
-        // const currentUrl = window.location.href;
-        // if (currentUrl !== this.previousUrl) {
-        //     // If URL has changed, rerender the custom div
-        //     this.renderCustomDiv();
-        //     // Update the previous URL
-        //     this.previousUrl = currentUrl;
-        // }
-        this.renderCustomDiv();
+        const currentUrl = window.location.href;
+        if (currentUrl !== this.previousUrl) {
+            // If URL has changed, rerender the custom div
+            this.renderCustomDiv();
+            // Update the previous URL
+            this.previousUrl = currentUrl;
+        }
         console.log("Timer hit!")
     }, 500); // Poll every 1 second (adjust interval as needed)
   }
