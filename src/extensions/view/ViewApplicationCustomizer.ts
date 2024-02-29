@@ -10,7 +10,7 @@ export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
-  private _counter: number = 1;
+  //private _counter: number = 1;
   private previousUrl: string;
 
   public onInit(): Promise<void> {
@@ -44,13 +44,29 @@ export default class ViewApplicationCustomizer
 
   private renderCustomDiv(): void {
     // Find URL, parse it and call the correct endpoint with REST API
-    // const url = window.location.href;
-    // const decodedUrl = decodeURIComponent(url);
-    // const parts = decodedUrl.split('/');
-    // const lastItem = parts[parts.length-1];
+    const url = window.location.href;
+    const decodedUrl = decodeURIComponent(url);
+    const parts = decodedUrl.split('/');
+    let opportunity: string;
+    if (parts.length < 16) {
+      let divToRemove = document.getElementById("InjectedExtensionDiv");
+      if (divToRemove) {
+        if (divToRemove.parentNode) {
+          divToRemove.parentNode.removeChild(divToRemove);
+        }
+      }
+      return;
+    }else if (parts.length == 16) {
+      const last = parts[15];
+      const lastSplit = last.split('&');
+      opportunity = lastSplit[0];
+    }else{
+      opportunity = parts[15];
+    }
+  
     
     // Make a GET request to fetch items from the "Temporary" list
-    this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq 'D22_CZ-TMCZ~00Q3N000007AFRJUA4'`, SPHttpClient.configurations.v1)
+    this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq '${opportunity}'`, SPHttpClient.configurations.v1)
       .then((response: SPHttpClientResponse) => {
         if (response.ok) {
           return response.json();
@@ -85,7 +101,7 @@ export default class ViewApplicationCustomizer
             if (targetElement) {
               targetElement.insertAdjacentHTML('afterend', `
                 <div id="InjectedExtensionDiv">
-                  <p>${this._counter++}</p>
+                  <p>${opportunity}</p>
                   <p>Title: ${data.Title}</p>
                   <p>Sfa Lead Id: ${data.sfaLeadId}</p>
                   <p>Sfa Customer: ${data.sfaCustomer}</p>
@@ -101,8 +117,7 @@ export default class ViewApplicationCustomizer
           } else {
             // If the div exists, update its content
             injectedDiv.innerHTML = `
-              <p>Updated</p>
-              <p>${this._counter++}</p>
+              <p>${opportunity}</p>
               <p>Title: ${data.Title}</p>
               <p>Sfa Lead Id: ${data.sfaLeadId}</p>
               <p>Sfa Customer: ${data.sfaCustomer}</p>
