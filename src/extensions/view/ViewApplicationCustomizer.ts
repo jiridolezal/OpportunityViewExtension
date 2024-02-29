@@ -11,18 +11,36 @@ export default class ViewApplicationCustomizer
 
   private spHttpClient: SPHttpClient;
   private _counter: number = 1;
+  //private previousUrl: string;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
 
-    // Add event listener for location change
-    // window.addEventListener('navigate', this.renderCustomDiv.bind(this));
+     // Save the initial URL
+     //this.previousUrl = window.location.href;
 
-    // Render the custom div
-    this.renderCustomDiv();
+     // Start polling for URL changes
+     this.startUrlPolling();
+ 
+     // Render the custom div initially
+     this.renderCustomDiv();
+ 
+     return Promise.resolve();
+  }
 
-    return Promise.resolve();
+  private startUrlPolling(): void {
+    setInterval(() => {
+        // const currentUrl = window.location.href;
+        // if (currentUrl !== this.previousUrl) {
+        //     // If URL has changed, rerender the custom div
+        //     this.renderCustomDiv();
+        //     // Update the previous URL
+        //     this.previousUrl = currentUrl;
+        // }
+        this.renderCustomDiv();
+        console.log("Timer hit!")
+    }, 500); // Poll every 1 second (adjust interval as needed)
   }
 
   private renderCustomDiv(): void {
@@ -84,6 +102,7 @@ export default class ViewApplicationCustomizer
           } else {
             // If the div exists, update its content
             injectedDiv.innerHTML = `
+              <p>Updated</p>
               <p>${this._counter++}</p>
               <p>Title: ${data.Title}</p>
               <p>Sfa Lead Id: ${data.sfaLeadId}</p>
@@ -115,11 +134,5 @@ export default class ViewApplicationCustomizer
           return Promise.reject(response.statusText);
         }
       });
-  }
-
-  // Remove event listener on dispose
-  protected onDispose(): void {
-    window.removeEventListener('locationchange', this.renderCustomDiv);
-    super.onDispose();
   }
 }
