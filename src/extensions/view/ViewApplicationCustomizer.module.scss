@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+
+// GENERAL RULESET
+p {
+    margin: 0;
+}
+
+// Base container of all injeted divs
+.baseInjectedDiv {
+    max-height: 30dvh;
+    font-family: 'Inter', sans-serif;
+    background-image: url("../assets/tmobile_background.png");
+}
+
+// OPPORTUNITY ITEM
+// Container with the name and value of the opportunity parameter
+.opportunityItemView {
+    display: flex;
+    /* Set flex-direction to row to place items side by side */
+    flex-direction: row;
+    /* Apply space between items */
+    gap: 5px;
+}
+
+// /* Style for the paragraphs inside .opportunityItemView */
+// .opportunityItemView p {
+//     /* Optional: Adjust width if needed */
+//     width: 50%; /* Each paragraph takes 50% of the container */
+//     /* Optional: Apply any other styling you need */
+//     margin: 0; /* Remove default margins */
+//     /* Additional styling as needed */
+// } 
+
+// Name of the parameter (example: "sfaCustomer")
+.opportunityItemParamName {
+    font-size: small;
+    font-weight: 400;
+    color: black;
+    width: 100px;
+}
+
+// Parameter Value
+.opportunityItemParamValue {
+    font-size: small;
+    font-weight: 700;
+    color: #E1017B;
+}
+
+// Opportunity Title with the name and value of the title
+.opportunityTitleContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    gap: 5px;
+    color: black
+}
+
+// Opportunity title name ("Nazev zakazky")
+.opportunityTitleParam {
+    font-size: small;
+    font-weight: 400;
+    color: black
+}
+
+// Opportunity name value
+.opportunityTitleValue {
+    font-size: x-large;
+    font-weight: 700;
+    color: black
+}
+
+.opportunityViewContent > div {
+    margin-bottom: 20px; /* Add a large gap between the divs */
+}
+
+// The container encapsulating all opportunity parameters
+.opportunityItems {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three columns with equal width */
+    gap: 20px; /* Wide gap between columns */
+}
+
+
+// Container for the buttons in the opportunity
+.opportunityButtonContainer {
+    display: flex; /* Use flexbox to align items */
+    gap: 15px; /* Apply a small gap between buttons */
+}
+
+// Link button itself
+.opportunityLinkButton {
+    background-color: #03787C; /* Set background color */
+    width: 105px; /* Set fixed width */
+    height: 32px; /* Set fixed height */
+    border-radius: 3px; /* Set border radius */
+    padding: 10px; /* Apply padding */
+    gap: 10px; /* Apply gap */
+
+    /* Center align text and vertically align it */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Font styles */
+    font-family: "Segoe UI", sans-serif; /* Set font family */
+    font-weight: 600; /* Set font weight */
+    font-size: 14px; /* Set font size */
+    color: white; /* Set text color */
+    text-decoration: none; /* Remove underline for links */
+    text-align: center; /* Center align text */
+    cursor: pointer; /* Change cursor on hover */
+    border: none; /* Remove default button border */
+}
+
+// Div that conatains the content on the left as well as the buttons on the right
+.wholeDiv {
+    display: flex;
+    margin-top: 32px; /* Add big margin from the top */
+    margin-left: 32px; /* Add slight margin from the left */
+    margin-right: 32px; /* Add slight margin from the right */
+}
+
+/* Style for the first child div */
+.wholeDiv > div:first-child {
+    width: 65%; /* Set width to 75% of the container */
+}
+
+/* Style for the second child div */
+.wholeDiv > div:last-child {
+    width: 35%; /* Set width to 25% of the container */
+}

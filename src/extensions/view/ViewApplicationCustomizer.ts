@@ -1,6 +1,7 @@
 import { BaseApplicationCustomizer } from '@microsoft/sp-application-base';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { IOpportunity } from '../../IOpportunity';
+import styles from './ViewApplicationCustomizer.module.scss';
 
 export interface IViewApplicationCustomizerProperties {
   testMessage: string;
@@ -39,7 +40,7 @@ export default class ViewApplicationCustomizer
             this.previousUrl = currentUrl;
         }
         console.log("Timer hit!")
-    }, 500); // Poll every 1 second (adjust interval as needed)
+    }, 500); // Poll every half second (adjust interval as needed)
   }
 
   private renderCustomDiv(): void {
@@ -64,7 +65,6 @@ export default class ViewApplicationCustomizer
       opportunity = parts[15];
     }
   
-    
     // Make a GET request to fetch items from the "Temporary" list
     this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq '${opportunity}'`, SPHttpClient.configurations.v1)
       .then((response: SPHttpClientResponse) => {
@@ -80,57 +80,21 @@ export default class ViewApplicationCustomizer
         const data: IOpportunity = responseData.value[0];
         console.log(`Successfully loaded Opportunity: ${data.sfaLeadId}`);
 
-        // Fetch user information for each ID
-        Promise.all([
-          this.getUserInfo(data.sfaSalerStringId),
-          this.getUserInfo(data.sfaBidManagerStringId),
-          this.getUserInfo(data.sfaGarantStringId),
-          this.getUserInfo(data.sfaLegalStringId)
-        ])
-        .then((usersData: any[]) => {
-          const salerName = usersData[0].Title;
-          const managerName = usersData[1].Title;
-          const garantName = usersData[2].Title;
-          const legalName = usersData[3].Title;
+        // Create or update the dynamic content
+        let injectedDiv = document.getElementById("InjectedExtensionDiv");
 
-          // Create or update the dynamic content
-          let injectedDiv = document.getElementById('InjectedExtensionDiv');
-          if (!injectedDiv) {
-            // If the div doesn't exist, create a new one
-            const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
-            if (targetElement) {
-              targetElement.insertAdjacentHTML('afterend', `
-                <div id="InjectedExtensionDiv">
-                  <p>${opportunity}</p>
-                  <p>Title: ${data.Title}</p>
-                  <p>Sfa Lead Id: ${data.sfaLeadId}</p>
-                  <p>Sfa Customer: ${data.sfaCustomer}</p>
-                  <p>Sfa Saler: ${salerName}</p>
-                  <p>Sfa Manager: ${managerName}</p>
-                  <p>Sfa Garant: ${garantName}</p>
-                  <p>Sfa Legal: ${legalName}</p>
-                </div>
-              `);
-            } else {
-              console.error("Target element not found.");
-            }
+        if (!injectedDiv) {
+          // If the div doesn't exist, create a new one
+          const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
+          if (targetElement) {
+            targetElement.insertAdjacentElement('afterend', this.generateInjectedDiv(data));
           } else {
-            // If the div exists, update its content
-            injectedDiv.innerHTML = `
-              <p>${opportunity}</p>
-              <p>Title: ${data.Title}</p>
-              <p>Sfa Lead Id: ${data.sfaLeadId}</p>
-              <p>Sfa Customer: ${data.sfaCustomer}</p>
-              <p>Sfa Saler: ${salerName}</p>
-              <p>Sfa Manager: ${managerName}</p>
-              <p>Sfa Garant: ${garantName}</p>
-              <p>Sfa Legal: ${legalName}</p>
-            `;
+            console.error("Target element not found.");
           }
-        })
-        .catch((error: any) => {
-          console.error(`Error: ${error}`);
-        });
+        } else {
+          // If the div exists, update its content
+          injectedDiv = this.generateInjectedDiv(data);
+        }
       })
       .catch((error: any) => {
         console.error(`Error: ${error}`);
@@ -148,5 +112,120 @@ export default class ViewApplicationCustomizer
           return Promise.reject(response.statusText);
         }
       });
+  }
+
+  // Method to generate Opportunity items
+  private generateOpportunityItem(parameterName: string, parameterValue: string): HTMLElement {
+    let divElem = document.createElement('div');
+    divElem.className = styles.opportunityItemView;
+
+    let parameterNamePar = document.createElement('p');
+    parameterNamePar.className = styles.opportunityItemParamName;
+    parameterNamePar.innerHTML = parameterName;
+
+    let parameterValuePar = document.createElement('p');
+    parameterValuePar.className = styles.opportunityItemParamValue;
+    parameterValuePar.innerHTML = parameterValue;
+
+    divElem.appendChild(parameterNamePar);
+    divElem.appendChild(parameterValuePar);
+
+    return divElem;
+  }
+
+  private generateButtons(/*linkTeams: string, linkSalesForce: string*/): HTMLElement {
+    let divElem = document.createElement('div');
+    divElem.className = styles.opportunityButtonContainer;
+
+    let teamsButton = document.createElement('button');
+    teamsButton.className = styles.opportunityLinkButton;
+    teamsButton.innerHTML = 'Teams'
+
+    let salesForceButton = document.createElement('button');
+    salesForceButton.className = styles.opportunityLinkButton;
+    salesForceButton.innerHTML = 'SalesForce';
+
+    divElem.appendChild(teamsButton);
+    divElem.appendChild(salesForceButton);
+
+    return divElem;
+  }
+
+  private generateTitle(title: string): HTMLElement {
+    let divElem = document.createElement('div');
+    divElem.className = styles.opportunityTitleContainer;
+
+    let titleParam = document.createElement('p');
+    titleParam.className = styles.opportunityTitleParam;
+    titleParam.innerHTML = 'Název zakázky';
+
+    let titleValue = document.createElement('p');
+    titleValue.className = styles.opportunityTitleValue;
+    titleValue.innerHTML = title;
+
+    divElem.appendChild(titleParam);
+    divElem.appendChild(titleValue);
+
+    return divElem;
+  }
+
+  private generateItems(data: IOpportunity): HTMLElement {
+    let divElem = document.createElement('div');
+    divElem.className = styles.opportunityItems;
+
+    // Fetch user information for each ID
+    Promise.all([
+      this.getUserInfo(data.sfaSalerStringId),
+      this.getUserInfo(data.sfaBidManagerStringId),
+      this.getUserInfo(data.sfaGarantStringId),
+      this.getUserInfo(data.sfaLegalStringId)
+    ])
+    .then((usersData: any[]) => {
+      const salerName = usersData[0].Title;
+      const managerName = usersData[1].Title;
+      const garantName = usersData[2].Title;
+      const legalName = usersData[3].Title;
+
+      divElem.appendChild(this.generateOpportunityItem('sfaCustomer', data.sfaCustomer));
+      divElem.appendChild(this.generateOpportunityItem('sfaLeadName', data.sfaLeadName));
+      divElem.appendChild(this.generateOpportunityItem('sfaRfpDay', data.sfaRfpDay));
+      divElem.appendChild(this.generateOpportunityItem('sfaBidManager', managerName));
+      divElem.appendChild(this.generateOpportunityItem('sfaGarant', garantName));
+      divElem.appendChild(this.generateOpportunityItem('sfaLegal', legalName));
+      divElem.appendChild(this.generateOpportunityItem('sfaSaler', salerName));
+      divElem.appendChild(this.generateOpportunityItem('sfaGoNoGo', data.sfaGoNoGo));
+    })
+
+    return divElem;
+  }
+
+  private generateContent(data: IOpportunity): HTMLElement {
+    let divElem = document.createElement('div');
+    divElem.className = styles.opportunityViewContent;
+    
+    let titleDiv = this.generateTitle(data.Title);
+    let itemsDiv = this.generateItems(data);
+
+    divElem.appendChild(titleDiv);
+    divElem.appendChild(itemsDiv);
+
+    return divElem;
+  }
+
+  private generateInjectedDiv(data: IOpportunity): HTMLElement {
+    const wholeDiv = document.createElement("div");
+    wholeDiv.className = styles.wholeDiv;
+
+    const baseDiv = document.createElement("div");
+
+    baseDiv.setAttribute("id", "InjectedExtensionDiv");
+    baseDiv.className = styles.baseInjectedDiv
+
+    wholeDiv.appendChild(this.generateContent(data));
+    wholeDiv.appendChild(this.generateButtons());
+
+    baseDiv.appendChild(wholeDiv);
+
+    return baseDiv;
   }
 }
