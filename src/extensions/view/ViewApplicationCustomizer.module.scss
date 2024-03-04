@@ -37,7 +37,7 @@ p {
     font-size: small;
     font-weight: 400;
     color: black;
-    width: 100px;
+    width: 110px;
 }
 
 // Parameter Value
@@ -85,6 +85,7 @@ p {
 // Container for the buttons in the opportunity
 .opportunityButtonContainer {
     display: flex; /* Use flexbox to align items */
+    justify-content: flex-end;
     gap: 15px; /* Apply a small gap between buttons */
 }
 
@@ -123,10 +124,10 @@ p {
 
 /* Style for the first child div */
 .wholeDiv > div:first-child {
-    width: 65%; /* Set width to 75% of the container */
+    width: 70%; /* Set width to 75% of the container */
 }
 
 /* Style for the second child div */
 .wholeDiv > div:last-child {
-    width: 35%; /* Set width to 25% of the container */
+    width: 30%; /* Set width to 25% of the container */
 }

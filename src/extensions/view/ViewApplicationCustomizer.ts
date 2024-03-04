@@ -186,14 +186,14 @@ export default class ViewApplicationCustomizer
       const garantName = usersData[2].Title;
       const legalName = usersData[3].Title;
 
-      divElem.appendChild(this.generateOpportunityItem('sfaCustomer', data.sfaCustomer));
-      divElem.appendChild(this.generateOpportunityItem('sfaLeadName', data.sfaLeadName));
-      divElem.appendChild(this.generateOpportunityItem('sfaRfpDay', data.sfaRfpDay));
-      divElem.appendChild(this.generateOpportunityItem('sfaBidManager', managerName));
-      divElem.appendChild(this.generateOpportunityItem('sfaGarant', garantName));
-      divElem.appendChild(this.generateOpportunityItem('sfaLegal', legalName));
-      divElem.appendChild(this.generateOpportunityItem('sfaSaler', salerName));
-      divElem.appendChild(this.generateOpportunityItem('sfaGoNoGo', data.sfaGoNoGo));
+      divElem.appendChild(this.generateOpportunityItem('Zadavatel', data.sfaCustomer));
+      divElem.appendChild(this.generateOpportunityItem('Název VZ', data.sfaLeadName));
+      divElem.appendChild(this.generateOpportunityItem('RFP Day', data.sfaRfpDay));
+      divElem.appendChild(this.generateOpportunityItem('Bid. M', managerName));
+      divElem.appendChild(this.generateOpportunityItem('Garant nabídky', garantName));
+      divElem.appendChild(this.generateOpportunityItem('Legal', legalName));
+      divElem.appendChild(this.generateOpportunityItem('Obchodník', salerName));
+      divElem.appendChild(this.generateOpportunityItem('Go/NoGo', data.sfaGoNoGo));
     })
 
     return divElem;
