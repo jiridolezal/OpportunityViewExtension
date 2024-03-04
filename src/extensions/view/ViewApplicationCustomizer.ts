@@ -7,11 +7,17 @@ export interface IViewApplicationCustomizerProperties {
   testMessage: string;
 }
 
+// export interface IConfig {
+//   tenantId: string,
+//   opportunityUrl: string,
+//   leadUrl: string,
+//   rootFolderIndex: number
+// }
+
 export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
-  //private _counter: number = 1;
   private previousUrl: string;
 
   public onInit(): Promise<void> {
@@ -145,12 +151,21 @@ export default class ViewApplicationCustomizer
       const sfaTeamId = data.sfaTeamId;
       const tenantId = 'af67006a-f6c8-4865-a51a-a9255a4bccb8'; // TODO: Move into config
       const teamsUrl = `https://teams.microsoft.com/v2/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${tenantId}`;
-      window.location.href = teamsUrl;
+      window.open(teamsUrl, '_blank');
     });
 
     let salesForceButton = document.createElement('button');
     salesForceButton.className = styles.opportunityLinkButton;
     salesForceButton.innerHTML = 'SalesForce';
+    let salesForceUrl: string;
+    if (data.sfaOpportunityId === null || data.sfaOpportunityId === undefined) {
+      salesForceUrl = `https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=${data.sfaOpportunityId}`;
+    }else{
+      salesForceUrl = `https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=${data.sfaLeadId}`;
+    }
+    salesForceButton.addEventListener('click', () => {
+      window.open(salesForceUrl, '_blank');
+    });
 
     divElem.appendChild(teamsButton);
     divElem.appendChild(salesForceButton);
