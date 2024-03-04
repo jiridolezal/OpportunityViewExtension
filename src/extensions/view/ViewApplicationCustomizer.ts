@@ -133,13 +133,20 @@ export default class ViewApplicationCustomizer
     return divElem;
   }
 
-  private generateButtons(/*linkTeams: string, linkSalesForce: string*/): HTMLElement {
+  private generateButtons(data: IOpportunity): HTMLElement {
     let divElem = document.createElement('div');
     divElem.className = styles.opportunityButtonContainer;
 
     let teamsButton = document.createElement('button');
     teamsButton.className = styles.opportunityLinkButton;
-    teamsButton.innerHTML = 'Teams'
+    teamsButton.innerHTML = 'Teams';
+    teamsButton.addEventListener('click', () => {
+      const sfaGenChannel = data.sfaGenChannel;
+      const sfaTeamId = data.sfaTeamId;
+      const tenantId = 'af67006a-f6c8-4865-a51a-a9255a4bccb8'; // TODO: Move into config
+      const teamsUrl = `https://teams.microsoft.com/v2/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${tenantId}`;
+      window.location.href = teamsUrl;
+    });
 
     let salesForceButton = document.createElement('button');
     salesForceButton.className = styles.opportunityLinkButton;
@@ -222,7 +229,7 @@ export default class ViewApplicationCustomizer
     baseDiv.className = styles.baseInjectedDiv
 
     wholeDiv.appendChild(this.generateContent(data));
-    wholeDiv.appendChild(this.generateButtons());
+    wholeDiv.appendChild(this.generateButtons(data));
 
     baseDiv.appendChild(wholeDiv);
 
