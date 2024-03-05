@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { BaseApplicationCustomizer } from '@microsoft/sp-application-base';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { IOpportunity } from '../../IOpportunity';
@@ -7,22 +9,32 @@ export interface IViewApplicationCustomizerProperties {
   testMessage: string;
 }
 
-// export interface IConfig {
-//   tenantId: string,
-//   opportunityUrl: string,
-//   leadUrl: string,
-//   rootFolderIndex: number
-// }
+export interface IConfig {
+  tenantId: string,
+  opportunityUrl: string,
+  leadUrl: string,
+  rootFolderIndex: number
+}
 
 export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
+  private config: IConfig;
   private previousUrl: string;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
+
+    // Load config
+    this.loadConfig();
+
+    // Check if the current page is "Verejne_zakazky"
+    if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+      // Render the custom div only if on "Verejne_zakazky" page
+      this.renderCustomDiv();
+    }
 
     // Save the initial URL
     this.previousUrl = window.location.href;
@@ -30,45 +42,75 @@ export default class ViewApplicationCustomizer
     // Start polling for URL changes
     this.startUrlPolling();
  
-    // Render the custom div initially
-    this.renderCustomDiv();
- 
     return Promise.resolve();
+  }
+
+  // protected onPlaceholdersChanged(placeholderProvider: PlaceholderProvider): void {
+  //   this.renderCustomDiv();
+  // }
+
+  private async loadConfig(): Promise<void> {
+    try {
+        const configUrl: string = `${this.context.pageContext.web.absoluteUrl}/_api/web/getfilebyserverrelativeurl('/sites/tmoZakazky/scripts/spfx.json')/$value`;
+        const response: SPHttpClientResponse = await this.context.spHttpClient.get(configUrl, SPHttpClient.configurations.v1);
+        const configJson: any = await response.json();
+        this.config = configJson;
+        console.log("Config loaded", this.config); // Log the config to verify
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
   }
 
   private startUrlPolling(): void {
     setInterval(() => {
         const currentUrl = window.location.href;
         if (currentUrl !== this.previousUrl) {
-            // If URL has changed, rerender the custom div
-            this.renderCustomDiv();
             // Update the previous URL
             this.previousUrl = currentUrl;
+
+            // Check if the current page is "Verejne_zakazky"
+            if (currentUrl.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+                // If URL has changed and on "Verejne_zakazky" page, rerender the custom div
+                this.renderCustomDiv();
+            } else {
+                // If not on "Verejne_zakazky" page, remove the custom div
+                let divToRemove = document.getElementById("InjectedExtensionDiv");
+                if (divToRemove && divToRemove.parentNode) {
+                    divToRemove.parentNode.removeChild(divToRemove);
+                }
+            }
         }
-        console.log("Timer hit!")
+        console.log("Timer hit!");
     }, 500); // Poll every half second (adjust interval as needed)
+  }
+
+  private removeInjectedExtensionDiv(): void {
+    let divToRemove = document.getElementById("InjectedExtensionDiv");
+    if (divToRemove && divToRemove.parentNode) {
+      divToRemove.parentNode.removeChild(divToRemove);
+    }
   }
 
   private renderCustomDiv(): void {
     // Find URL, parse it and call the correct endpoint with REST API
     const url = window.location.href;
     const decodedUrl = decodeURIComponent(url);
-    const parts = decodedUrl.split('/');
-    let opportunity: string;
-    if (parts.length < 16) {
-      let divToRemove = document.getElementById("InjectedExtensionDiv");
-      if (divToRemove) {
-        if (divToRemove.parentNode) {
-          divToRemove.parentNode.removeChild(divToRemove);
-        }
-      }
+    // Find the index of the part that starts with 'id='
+    const idIndex = decodedUrl.indexOf('id=');
+    if (idIndex === -1) {
+      this.removeInjectedExtensionDiv();
       return;
-    }else if (parts.length == 16) {
-      const last = parts[15];
-      const lastSplit = last.split('&');
-      opportunity = lastSplit[0];
-    }else{
-      opportunity = parts[15];
+    }
+    // Get the parts after 'id='
+    const partsAfterId = decodedUrl.substring(idIndex + 4).split('/');
+    let opportunity: string;
+    if (partsAfterId.length < 4) {
+      this.removeInjectedExtensionDiv();
+      return;
+    } else if (partsAfterId.length === 4) {
+      opportunity = partsAfterId[3].split('&')[0];
+    } else {
+      opportunity = partsAfterId[3];
     }
   
     // Make a GET request to fetch items from the "Temporary" list
@@ -149,8 +191,7 @@ export default class ViewApplicationCustomizer
     teamsButton.addEventListener('click', () => {
       const sfaGenChannel = data.sfaGenChannel;
       const sfaTeamId = data.sfaTeamId;
-      const tenantId = 'af67006a-f6c8-4865-a51a-a9255a4bccb8'; // TODO: Move into config
-      const teamsUrl = `https://teams.microsoft.com/v2/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${tenantId}`;
+      const teamsUrl = `https://teams.microsoft.com/v2/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${this.config.tenantId}`;
       window.open(teamsUrl, '_blank');
     });
 
@@ -159,9 +200,9 @@ export default class ViewApplicationCustomizer
     salesForceButton.innerHTML = 'SalesForce';
     let salesForceUrl: string;
     if (data.sfaOpportunityId === null || data.sfaOpportunityId === undefined) {
-      salesForceUrl = `https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=${data.sfaOpportunityId}`;
+      salesForceUrl = `${this.config.opportunityUrl}${data.sfaOpportunityId}`;
     }else{
-      salesForceUrl = `https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=${data.sfaLeadId}`;
+      salesForceUrl = `${this.config.leadUrl}${data.sfaLeadId}`;
     }
     salesForceButton.addEventListener('click', () => {
       window.open(salesForceUrl, '_blank');
@@ -251,3 +292,5 @@ export default class ViewApplicationCustomizer
     return baseDiv;
   }
 }
+
+/* eslint-enable */
