@@ -160,6 +160,10 @@ export default class ViewApplicationCustomizer
 
   // Method to generate Opportunity items
   private generateOpportunityItem(parameterName: string, parameterValue: string): HTMLElement {
+    if (parameterValue === null || parameterValue === undefined) {
+      parameterValue = 'N/A';
+    }
+    
     let divElem = document.createElement('div');
     divElem.className = styles.opportunityItemView;
 
