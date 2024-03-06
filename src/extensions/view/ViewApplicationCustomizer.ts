@@ -45,17 +45,13 @@ export default class ViewApplicationCustomizer
     return Promise.resolve();
   }
 
-  // protected onPlaceholdersChanged(placeholderProvider: PlaceholderProvider): void {
-  //   this.renderCustomDiv();
-  // }
-
   private async loadConfig(): Promise<void> {
     try {
         const configUrl: string = `${this.context.pageContext.web.absoluteUrl}/_api/web/getfilebyserverrelativeurl('/sites/tmoZakazky/scripts/spfx.json')/$value`;
         const response: SPHttpClientResponse = await this.context.spHttpClient.get(configUrl, SPHttpClient.configurations.v1);
         const configJson: any = await response.json();
         this.config = configJson;
-        console.log("Config loaded", this.config); // Log the config to verify
+        console.log("Config loaded", this.config); 
     } catch (error) {
         console.error('Error loading config:', error);
     }
