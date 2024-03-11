@@ -28,20 +28,21 @@ export default class ViewApplicationCustomizer
     this.spHttpClient = this.context.spHttpClient;
 
     // Load config
-    this.loadConfig();
-
-    // Check if the current page is "Verejne_zakazky"
-    if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
-      // Render the custom div only if on "Verejne_zakazky" page
-      this.renderCustomDiv();
-    }
-
+    this.loadConfig().then(() => {
+      // Check if the current page is "Verejne_zakazky"
+      if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+        // Render the custom div only if on "Verejne_zakazky" page
+        this.renderCustomDiv();
+      }
+    })
+    .catch((error: any) => {
+      console.error(`Error: ${error}`);
+    });
     // Save the initial URL
     this.previousUrl = window.location.href;
 
     // Start polling for URL changes
     this.startUrlPolling();
- 
     return Promise.resolve();
   }
 
