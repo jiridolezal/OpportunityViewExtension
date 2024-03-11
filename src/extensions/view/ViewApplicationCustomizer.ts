@@ -117,12 +117,16 @@ export default class ViewApplicationCustomizer
         if (response.ok) {
           return response.json();
         } else {
-          console.error(`Error getting data via REST Api: ${response.statusText}`);
-          return Promise.reject(response.statusText);
+          throw Error("Failed to fetch data");
         }
       })
       .then((responseData: any) => {
-        console.log(responseData);
+        if (responseData.length === 0) {
+          // If the data is empty, throw an error
+          throw Error('No matching sfaLeadId found in the database.');
+        }
+
+        console.log("Data from the REST Api call loaded: ", responseData);
         const data: IOpportunity = responseData.value[0];
         console.log(`Successfully loaded Opportunity: ${data.sfaLeadId}`, opportunity);
 
@@ -143,6 +147,7 @@ export default class ViewApplicationCustomizer
         }
       })
       .catch((error: any) => {
+        this.removeInjectedExtensionDiv();
         console.error(`Error: ${error}`);
       });
   }
@@ -205,8 +210,6 @@ export default class ViewApplicationCustomizer
     }
 
     let salesForceButton: HTMLButtonElement | null = document.createElement('button');
-    salesForceButton.className = styles.opportunityLinkButton;
-    salesForceButton.innerHTML = 'SalesForce';
     let salesForceUrl: string;
     if (data.sfaOpportunityId !== null && data.sfaOpportunityId !== undefined &&
         this.config.opportunityUrl !== null && this.config.opportunityUrl !== undefined) {
@@ -222,6 +225,8 @@ export default class ViewApplicationCustomizer
       divElem.appendChild(teamsButton);
     }
     if (salesForceButton !== null) {
+      salesForceButton.className = styles.opportunityLinkButton;
+      salesForceButton.innerHTML = 'SalesForce';
       salesForceButton.addEventListener('click', () => {
         window.open(salesForceUrl, '_blank');
       });
@@ -255,17 +260,33 @@ export default class ViewApplicationCustomizer
 
     // Fetch user information for each ID
     Promise.all([
-      this.getUserInfo(data.sfaSalerStringId),
-      this.getUserInfo(data.sfaBidManagerStringId),
-      this.getUserInfo(data.sfaGarantStringId),
-      this.getUserInfo(data.sfaLegalStringId)
+      (data.sfaSalerStringId === null || data.sfaSalerStringId == undefined) 
+       ? null 
+       : this.getUserInfo(data.sfaSalerStringId),
+      (data.sfaBidManagerStringId === null || data.sfaBidManagerStringId == undefined) 
+       ? null 
+       : this.getUserInfo(data.sfaBidManagerStringId),
+      (data.sfaGarantStringId === null || data.sfaGarantStringId == undefined) 
+       ? null 
+       : this.getUserInfo(data.sfaGarantStringId),
+      (data.sfaLegalStringId === null || data.sfaLegalStringId == undefined) 
+       ? null 
+       : this.getUserInfo(data.sfaLegalStringId)
     ])
     .then((usersData: any[]) => {
-      const salerName = usersData[0].Title;
-      const managerName = usersData[1].Title;
-      const garantName = usersData[2].Title;
-      const legalName = usersData[3].Title;
-
+      const salerName = (usersData[0] === null || usersData[0] == undefined)
+      ? null
+      : usersData[0].Title;
+      const managerName = (usersData[1] === null || usersData[1] == undefined)
+      ? null
+      : usersData[1].Title;
+      const garantName = (usersData[2] === null || usersData[2] == undefined)
+      ? null
+      : usersData[2].Title;
+      const legalName = (usersData[3] === null || usersData[3] == undefined)
+      ? null
+      : usersData[3].Title;
+      
       divElem.appendChild(this.generateOpportunityItem('Zadavatel', data.sfaCustomer));
       divElem.appendChild(this.generateOpportunityItem('Název VZ', data.sfaLeadName));
       divElem.appendChild(this.generateOpportunityItem('RFP Day', data.sfaRfpDay));
