@@ -13,31 +13,27 @@ export interface IConfig {
   tenantId: string,
   opportunityUrl: string,
   leadUrl: string,
-  rootFolderIndex: number
 }
 
 export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
-  private config: IConfig;
+  private config: IConfig = {tenantId: "b213b057-1008-4204-8c53-8147bc602a29", //TMobile specific tenant ID
+                             opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
+                             leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId="};
   private previousUrl: string;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
 
-    // Load config
-    this.loadConfig().then(() => {
-      // Check if the current page is "Verejne_zakazky"
-      if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
-        // Render the custom div only if on "Verejne_zakazky" page
-        this.renderCustomDiv();
-      }
-    })
-    .catch((error: any) => {
-      console.error(`Error: ${error}`);
-    });
+    // Check if the current page is "Verejne_zakazky"
+    if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+      // Render the custom div only if on "Verejne_zakazky" page
+      this.renderCustomDiv();
+    }
+
     // Save the initial URL
     this.previousUrl = window.location.href;
 
@@ -46,17 +42,17 @@ export default class ViewApplicationCustomizer
     return Promise.resolve();
   }
 
-  private async loadConfig(): Promise<void> {
-    try {
-        const configUrl: string = `${this.context.pageContext.web.absoluteUrl}/_api/web/getfilebyserverrelativeurl('/sites/tmoZakazky/scripts/spfx.json')/$value`;
-        const response: SPHttpClientResponse = await this.context.spHttpClient.get(configUrl, SPHttpClient.configurations.v1);
-        const configJson: any = await response.json();
-        this.config = configJson;
-        console.log("Config loaded", this.config); 
-    } catch (error) {
-        console.error('Error loading config:', error);
-    }
-  }
+  // private async loadConfig(): Promise<void> {
+  //   try {
+  //       const configUrl: string = `${this.context.pageContext.web.absoluteUrl}/_api/web/getfilebyserverrelativeurl('/sites/tmoZakazky/scripts/spfx.json')/$value`;
+  //       const response: SPHttpClientResponse = await this.context.spHttpClient.get(configUrl, SPHttpClient.configurations.v1);
+  //       const configJson: any = await response.json();
+  //       this.config = configJson;
+  //       console.log("Config loaded", this.config); 
+  //   } catch (error) {
+  //       console.error('Error loading config:', error);
+  //   }
+  // }
 
   private startUrlPolling(): void {
     setInterval(() => {
@@ -149,7 +145,7 @@ export default class ViewApplicationCustomizer
       })
       .catch((error: any) => {
         this.removeInjectedExtensionDiv();
-        console.error(`Error: ${error}`);
+        console.error(`Get request was not successful: ${error}`);
       });
   }
 
