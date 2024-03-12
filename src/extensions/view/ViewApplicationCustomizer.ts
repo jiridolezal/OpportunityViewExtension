@@ -13,6 +13,7 @@ export interface IConfig {
   tenantId: string,
   opportunityUrl: string,
   leadUrl: string,
+  siteName: string
 }
 
 export default class ViewApplicationCustomizer
@@ -21,7 +22,8 @@ export default class ViewApplicationCustomizer
   private spHttpClient: SPHttpClient;
   private config: IConfig = {tenantId: "b213b057-1008-4204-8c53-8147bc602a29", //TMobile specific tenant ID
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
-                             leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId="};
+                             leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
+                             siteName: "sites/f-test-zakazky/verejne_zakazky"};
   private previousUrl: string;
 
   public onInit(): Promise<void> {
@@ -29,7 +31,7 @@ export default class ViewApplicationCustomizer
     this.spHttpClient = this.context.spHttpClient;
 
     // Check if the current page is "Verejne_zakazky"
-    if (window.location.href.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+    if (window.location.href.toLowerCase().indexOf(this.config.siteName) !== -1) {
       // Render the custom div only if on "Verejne_zakazky" page
       this.renderCustomDiv();
     }
@@ -42,18 +44,6 @@ export default class ViewApplicationCustomizer
     return Promise.resolve();
   }
 
-  // private async loadConfig(): Promise<void> {
-  //   try {
-  //       const configUrl: string = `${this.context.pageContext.web.absoluteUrl}/_api/web/getfilebyserverrelativeurl('/sites/tmoZakazky/scripts/spfx.json')/$value`;
-  //       const response: SPHttpClientResponse = await this.context.spHttpClient.get(configUrl, SPHttpClient.configurations.v1);
-  //       const configJson: any = await response.json();
-  //       this.config = configJson;
-  //       console.log("Config loaded", this.config); 
-  //   } catch (error) {
-  //       console.error('Error loading config:', error);
-  //   }
-  // }
-
   private startUrlPolling(): void {
     setInterval(() => {
         const currentUrl = window.location.href;
@@ -62,7 +52,7 @@ export default class ViewApplicationCustomizer
             this.previousUrl = currentUrl;
 
             // Check if the current page is "Verejne_zakazky"
-            if (currentUrl.toLowerCase().indexOf("/sites/tmozakazky/verejne_zakazky") !== -1) {
+            if (currentUrl.toLowerCase().indexOf(this.config.siteName) !== -1) {
                 // If URL has changed and on "Verejne_zakazky" page, rerender the custom div
                 this.renderCustomDiv();
             } else {
