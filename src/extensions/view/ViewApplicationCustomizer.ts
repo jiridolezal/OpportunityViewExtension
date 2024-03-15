@@ -23,7 +23,7 @@ export default class ViewApplicationCustomizer
   private config: IConfig = {tenantId: "b213b057-1008-4204-8c53-8147bc602a29", //TMobile specific tenant ID
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
                              leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
-                             siteName: "sites/f-test-zakazky/verejne_zakazky"};
+                             siteName: "sites/tmozakazky/verejne_zakazky"};
   private previousUrl: string;
 
   public onInit(): Promise<void> {
@@ -41,7 +41,17 @@ export default class ViewApplicationCustomizer
 
     // Start polling for URL changes
     this.startUrlPolling();
+
+    // Listen to navigated event
+    this.context.application.navigatedEvent.add(this, this.onNavigated);
+
     return Promise.resolve();
+  }
+
+  private onNavigated(): void {
+    // This method will be called every time the page is navigated or refreshed
+    this.renderCustomDiv();
+    console.log("Window refreshed - custom div rerendered if necessary");
   }
 
   private startUrlPolling(): void {
