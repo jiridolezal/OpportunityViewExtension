@@ -57,10 +57,7 @@ export default class ViewApplicationCustomizer
                 this.renderCustomDiv();
             } else {
                 // If not on "Verejne_zakazky" page, remove the custom div
-                let divToRemove = document.getElementById("InjectedExtensionDiv");
-                if (divToRemove && divToRemove.parentNode) {
-                    divToRemove.parentNode.removeChild(divToRemove);
-                }
+                this.removeInjectedExtensionDiv();
             }
         }
         console.log("Polling for URL change...");
