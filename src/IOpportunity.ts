@@ -8,8 +8,9 @@ export interface IOpportunity {
     sfaGarantStringId: string,
     sfaLegalStringId: string,
     sfaGoNoGo: string,
-    Title: string,
     sfaGenChannel: string,
     sfaOpportunityId: string,
-    sfaTeamId: string
+    sfaTeamId: string,
+    sfaReasonOfLost: string,
+    sfaOpportunityPhase: string
 }

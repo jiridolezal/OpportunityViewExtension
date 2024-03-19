@@ -306,13 +306,14 @@ export default class ViewApplicationCustomizer
       : usersData[3].Title;
       
       divElem.appendChild(this.generateOpportunityItem('Zadavatel', data.sfaCustomer));
-      divElem.appendChild(this.generateOpportunityItem('Název VZ', data.sfaLeadName));
       divElem.appendChild(this.generateOpportunityItem('RFP Day', data.sfaRfpDay));
       divElem.appendChild(this.generateOpportunityItem('Bid. M', managerName));
       divElem.appendChild(this.generateOpportunityItem('Garant nabídky', garantName));
       divElem.appendChild(this.generateOpportunityItem('Legal', legalName));
       divElem.appendChild(this.generateOpportunityItem('Obchodník', salerName));
       divElem.appendChild(this.generateOpportunityItem('Go/NoGo', data.sfaGoNoGo));
+      divElem.appendChild(this.generateOpportunityItem('Fáze příležitosti', data.sfaOpportunityPhase));
+      divElem.appendChild(this.generateOpportunityItem('Důvod prohry', data.sfaReasonOfLost));
     })
 
     return divElem;
@@ -322,7 +323,7 @@ export default class ViewApplicationCustomizer
     let divElem = document.createElement('div');
     divElem.className = styles.opportunityViewContent;
     
-    let titleDiv = this.generateTitle(data.Title);
+    let titleDiv = this.generateTitle(data.sfaLeadName);
     let itemsDiv = this.generateItems(data);
 
     divElem.appendChild(titleDiv);
@@ -348,5 +349,4 @@ export default class ViewApplicationCustomizer
     return baseDiv;
   }
 }
-
 /* eslint-enable */
