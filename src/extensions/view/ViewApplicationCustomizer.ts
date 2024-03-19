@@ -24,9 +24,9 @@ export default class ViewApplicationCustomizer
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
                              leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
                              siteName: "sites/tmozakazky/verejne_zakazky"};
-                            //siteName: "sites/f-test-zakazky/verejne_zakazky"
+                            // siteName: "sites/f-test-zakazky/verejne_zakazky"
                             // TMO: b213b057-1008-4204-8c53-8147bc602a29
-                            // mnclab:af67006a-f6c8-4865-a51a-a9255a4bccb8
+                            // mnclab: af67006a-f6c8-4865-a51a-a9255a4bccb8
                              
   private previousUrl: string;
   private lastOpportunity: string = '';
@@ -48,9 +48,6 @@ export default class ViewApplicationCustomizer
     // Start polling for URL changes
     this.startUrlPolling();
 
-    // Listen to navigated event
-    this.context.application.navigatedEvent.add(this, this.onNavigated);
-
     return Promise.resolve();
   }
 
@@ -58,17 +55,6 @@ export default class ViewApplicationCustomizer
     // Remove the custom div when the extension is disposed
     if (this.urlPollingIntervalId) {
       clearInterval(this.urlPollingIntervalId);
-    }
-  }
-
-  private onNavigated(): void {
-    // This method will be called every time the page is navigated or refreshed
-    this.lastOpportunity = '';
-    // Check if the current page is "Verejne_zakazky"
-    if (window.location.href.toLowerCase().indexOf(this.config.siteName) !== -1) {
-      console.log("Window refreshed - custom div rerendered if necessary");
-      // Render the custom div only if on "Verejne_zakazky" page
-      this.renderCustomDiv();
     }
   }
 
