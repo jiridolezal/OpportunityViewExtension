@@ -72,6 +72,7 @@ p {
     max-height: 30dvh;
     font-family: 'Inter', sans-serif;
     background-image: url("../assets/tmobile_background.png");
+    color-scheme: light only;
 }
 
 // OPPORTUNITY ITEM
@@ -109,21 +110,21 @@ p {
     flex-direction: column;
     justify-content: left;
     gap: 5px;
-    color: black
+    color: black;
 }
 
 // Opportunity title name ("Nazev zakazky")
 .opportunityTitleParam {
     font-size: small;
     font-weight: 400;
-    color: black
+    color: black;
 }
 
 // Opportunity name value
 .opportunityTitleValue {
     font-size: x-large;
     font-weight: 700;
-    color: black
+    color: black;
 }
 
 .opportunityViewContent > div {

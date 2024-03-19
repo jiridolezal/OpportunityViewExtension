@@ -20,11 +20,17 @@ export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
-  private config: IConfig = {tenantId: "b213b057-1008-4204-8c53-8147bc602a29", //TMobile specific tenant ID
+  private config: IConfig = {tenantId: "af67006a-f6c8-4865-a51a-a9255a4bccb8",
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
                              leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
                              siteName: "sites/tmozakazky/verejne_zakazky"};
+                            //siteName: "sites/f-test-zakazky/verejne_zakazky"
+                            // TMO: b213b057-1008-4204-8c53-8147bc602a29
+                            // mnclab:af67006a-f6c8-4865-a51a-a9255a4bccb8
+                             
   private previousUrl: string;
+  private lastOpportunity: string = '';
+  private urlPollingIntervalId: number | null = null;
 
   public onInit(): Promise<void> {
     // Obtain SPHttpClient instance from context
@@ -48,14 +54,26 @@ export default class ViewApplicationCustomizer
     return Promise.resolve();
   }
 
+  protected onDispose(): void {
+    // Remove the custom div when the extension is disposed
+    if (this.urlPollingIntervalId) {
+      clearInterval(this.urlPollingIntervalId);
+    }
+  }
+
   private onNavigated(): void {
     // This method will be called every time the page is navigated or refreshed
-    this.renderCustomDiv();
-    console.log("Window refreshed - custom div rerendered if necessary");
+    this.lastOpportunity = '';
+    // Check if the current page is "Verejne_zakazky"
+    if (window.location.href.toLowerCase().indexOf(this.config.siteName) !== -1) {
+      console.log("Window refreshed - custom div rerendered if necessary");
+      // Render the custom div only if on "Verejne_zakazky" page
+      this.renderCustomDiv();
+    }
   }
 
   private startUrlPolling(): void {
-    setInterval(() => {
+    this.urlPollingIntervalId = setInterval(() => {
         const currentUrl = window.location.href;
         if (currentUrl !== this.previousUrl) {
             // Update the previous URL
@@ -79,6 +97,7 @@ export default class ViewApplicationCustomizer
     if (divToRemove && divToRemove.parentNode) {
       divToRemove.parentNode.removeChild(divToRemove);
     }
+    this.lastOpportunity = '';
   }
 
   private renderCustomDiv(): void {
@@ -132,12 +151,17 @@ export default class ViewApplicationCustomizer
           const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
           if (targetElement) {
             targetElement.insertAdjacentElement('afterend', this.generateInjectedDiv(data));
+            this.lastOpportunity = opportunity;
           } else {
             console.error("Target element not found. Cannot insert the custom div.");
+            this.lastOpportunity = '';
           }
         } else {
           // If the div exists, update its content
-          injectedDiv = this.generateInjectedDiv(data);
+          if (opportunity !== this.lastOpportunity) {
+            injectedDiv = this.generateInjectedDiv(data);
+          }
+          this.lastOpportunity = opportunity;
         }
       })
       .catch((error: any) => {
@@ -196,7 +220,7 @@ export default class ViewApplicationCustomizer
       teamsButton.addEventListener('click', () => {
         const sfaGenChannel = data.sfaGenChannel;
         const sfaTeamId = data.sfaTeamId;
-        const teamsUrl = `https://teams.microsoft.com/v2/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${this.config.tenantId}`;
+        const teamsUrl = `https://teams.microsoft.com/l/channel/${sfaGenChannel}/General?groupId=${sfaTeamId}&tenantId=${this.config.tenantId}`;
         window.open(teamsUrl, '_blank');
       });
     }else{
