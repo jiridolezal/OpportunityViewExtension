@@ -222,9 +222,11 @@ export default class ViewApplicationCustomizer
 
 
     let teamsButton : HTMLButtonElement | null = document.createElement('button');
+
     if ((data.sfaTeamId !== null && data.sfaTeamId !== undefined) &&
         (data.sfaGenChannel !== null && data.sfaGenChannel !== undefined) &&
-        (this.config.tenantId !== null && this.config.tenantId !== undefined)) {
+        (this.config.tenantId !== null && this.config.tenantId !== undefined) &&
+        !!data.sfaTeamDone) {
       teamsButton.className = styles.opportunityLinkButton;
       teamsButton.innerHTML = 'Teams';
       teamsButton.addEventListener('click', () => {

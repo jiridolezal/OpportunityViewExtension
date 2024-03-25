@@ -12,5 +12,6 @@ export interface IOpportunity {
     sfaOpportunityId: string,
     sfaTeamId: string,
     sfaReasonOfLost: string,
-    sfaOpportunityPhase: string
+    sfaOpportunityPhase: string,
+    sfaTeamDone: boolean | null
 }
