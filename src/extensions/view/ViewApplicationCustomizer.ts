@@ -21,14 +21,11 @@ export default class ViewApplicationCustomizer
   extends BaseApplicationCustomizer<IViewApplicationCustomizerProperties> {
 
   private spHttpClient: SPHttpClient;
-  private config: IConfig = {tenantId: "af67006a-f6c8-4865-a51a-a9255a4bccb8",
+  private config: IConfig = {tenantId: "b213b057-1008-4204-8c53-8147bc602a29",
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
                              leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
-                             siteName: "sites/tmozakazky/verejne_zakazky",
+                             siteName: "sites/f-test-zakazky/verejne_zakazky",
                              keySequence: 'id=/'};
-                            // siteName: "sites/f-test-zakazky/verejne_zakazky"
-                            // TMO: b213b057-1008-4204-8c53-8147bc602a29
-                            // mnclab: af67006a-f6c8-4865-a51a-a9255a4bccb8
                              
   private previousUrl: string;
   private currentlyOnSiteWithoutInfo : boolean = false;
@@ -58,6 +55,7 @@ export default class ViewApplicationCustomizer
   }
 
   private startUrlPolling(): void {
+    console.log("Starting URL polling.");
     this.urlPollingIntervalId = setInterval(() => {
         const currentUrl = window.location.href;
         if (currentUrl !== this.previousUrl) {
@@ -116,6 +114,8 @@ export default class ViewApplicationCustomizer
         const data = await this.fetchData(opportunity);
         if (!!data) {
           this.renderCustomDiv(data);
+        } else {
+          this.removeInjectedExtensionDiv();
         }
       }
     }

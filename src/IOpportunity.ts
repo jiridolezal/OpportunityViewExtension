@@ -1,3 +1,4 @@
+/* eslint-disable */
 export interface IOpportunity {
     sfaLeadId: string,
     sfaCustomer: string,
@@ -15,3 +16,4 @@ export interface IOpportunity {
     sfaOpportunityPhase: string,
     sfaTeamDone: boolean | null
 }
+/* eslint-enable */
