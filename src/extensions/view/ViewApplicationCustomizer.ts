@@ -13,7 +13,8 @@ export interface IConfig {
   tenantId: string,
   opportunityUrl: string,
   leadUrl: string,
-  siteName: string
+  siteName: string,
+  keySequence : string
 }
 
 export default class ViewApplicationCustomizer
@@ -23,24 +24,22 @@ export default class ViewApplicationCustomizer
   private config: IConfig = {tenantId: "af67006a-f6c8-4865-a51a-a9255a4bccb8",
                              opportunityUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Opportunity&c__externalId=", 
                              leadUrl: "https://tmobileczsk--situat.sandbox.lightning.force.com/lightning/cmp/coredt__NavigateTo?c__objectName=Lead&c__externalId=",
-                             siteName: "sites/tmozakazky/verejne_zakazky"};
+                             siteName: "sites/tmozakazky/verejne_zakazky",
+                             keySequence: 'id=/'};
                             // siteName: "sites/f-test-zakazky/verejne_zakazky"
                             // TMO: b213b057-1008-4204-8c53-8147bc602a29
                             // mnclab: af67006a-f6c8-4865-a51a-a9255a4bccb8
                              
   private previousUrl: string;
+  private currentlyOnSiteWithoutInfo : boolean = false;
   private lastOpportunity: string = '';
   private urlPollingIntervalId: number | null = null;
 
-  public onInit(): Promise<void> {
+  public async onInit(): Promise<void> {
+    console.log("Initializing ViewApplicationCustomizer extension.");
+
     // Obtain SPHttpClient instance from context
     this.spHttpClient = this.context.spHttpClient;
-
-    // Check if the current page is "Verejne_zakazky"
-    if (window.location.href.toLowerCase().indexOf(this.config.siteName) !== -1) {
-      // Render the custom div only if on "Verejne_zakazky" page
-      this.renderCustomDiv();
-    }
 
     // Save the initial URL
     this.previousUrl = window.location.href;
@@ -53,7 +52,7 @@ export default class ViewApplicationCustomizer
 
   protected onDispose(): void {
     // Remove the custom div when the extension is disposed
-    if (this.urlPollingIntervalId) {
+    if (!!this.urlPollingIntervalId) {
       clearInterval(this.urlPollingIntervalId);
     }
   }
@@ -62,19 +61,16 @@ export default class ViewApplicationCustomizer
     this.urlPollingIntervalId = setInterval(() => {
         const currentUrl = window.location.href;
         if (currentUrl !== this.previousUrl) {
-            // Update the previous URL
-            this.previousUrl = currentUrl;
-
-            // Check if the current page is "Verejne_zakazky"
-            if (currentUrl.toLowerCase().indexOf(this.config.siteName) !== -1) {
-                // If URL has changed and on "Verejne_zakazky" page, rerender the custom div
-                this.renderCustomDiv();
-            } else {
-                // If not on "Verejne_zakazky" page, remove the custom div
-                this.removeInjectedExtensionDiv();
-            }
+          this.previousUrl = currentUrl;
+          this.currentlyOnSiteWithoutInfo = false;
         }
-        console.log("Polling for URL change...");
+        if (currentUrl.toLowerCase().indexOf(this.config.siteName) !== -1) {
+            // If URL has changed and on "Verejne_zakazky" page, rerender the custom div
+            this.processOpportunity();
+        } else { 
+            // If not on "Verejne_zakazky" page, remove the custom div
+            this.removeInjectedExtensionDiv();
+        }      
     }, 500); // Poll every half second (adjust interval as needed)
   }
 
@@ -86,32 +82,82 @@ export default class ViewApplicationCustomizer
     this.lastOpportunity = '';
   }
 
-  private renderCustomDiv(): void {
+  private async processOpportunity(): Promise<void> {
+    let opportunity: string | null = this.parseUrl();
+    // If opportunity is not found, remove the injected div and return
+    if (!opportunity) {
+      this.removeInjectedExtensionDiv();
+      this.lastOpportunity = '';
+      return Promise.resolve();
+    }
+
+    // Log if opportunity has changed
+    if (opportunity !== this.lastOpportunity) {
+      console.log(`Opportunity changed - ${opportunity}. Fetching new data.`);
+    }
+
+    // Find the injected div
+    let injectedDiv = document.getElementById("InjectedExtensionDiv");
+    
+
+    if (!injectedDiv) {
+      if (this.currentlyOnSiteWithoutInfo) {
+        this.lastOpportunity = opportunity;
+        return Promise.resolve();
+      }
+      const data = await this.fetchData(opportunity);
+      if (!!data) {
+        this.renderCustomDiv(data);
+      } else {
+        this.currentlyOnSiteWithoutInfo = true;
+      }
+    } else {
+      if (this.lastOpportunity !== opportunity) {
+        const data = await this.fetchData(opportunity);
+        if (!!data) {
+          this.renderCustomDiv(data);
+        }
+      }
+    }
+    this.lastOpportunity = opportunity;
+    return Promise.resolve();
+  }
+
+  private renderCustomDiv(data: IOpportunity): void {
+    // Find the target element to eventually insert the custom div
+    const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
+
+    if (targetElement) {
+      this.removeInjectedExtensionDiv();
+      targetElement.insertAdjacentElement('afterend', this.generateInjectedDiv(data));
+      console.log("Custom div generated and inserted.");
+    } else {
+      console.error("Target element not found. Cannot insert the custom div.");
+    }
+  }
+
+  private parseUrl(): string | null {
     // Find URL, parse it and call the correct endpoint with REST API
     const url = window.location.href;
     const decodedUrl = decodeURIComponent(url);
-    // Find the index of the part that starts with 'id='
-    const idIndex = decodedUrl.indexOf('id=');
+    // Find the index of the part that starts with keySequence
+    const keySequence = this.config.keySequence;
+    const idIndex = decodedUrl.indexOf(keySequence);
+    // If the keySequence is not present, remove the injected div
     if (idIndex === -1) {
-      this.removeInjectedExtensionDiv();
-      return;
+      return null;
     }
-    // Get the parts after 'id='
-    const partsAfterId = decodedUrl.substring(idIndex + 4).split('/');
-    let opportunity: string;
+    // Get the parts after keySequence
+    const partsAfterId = decodedUrl.substring(idIndex + keySequence.length).split('/');
     if (partsAfterId.length < 4) {
-      this.removeInjectedExtensionDiv();
-      return;
-    } else if (partsAfterId.length === 4) {
-      opportunity = partsAfterId[3].split('&')[0];
+      return null;
     } else {
-      opportunity = partsAfterId[3];
+      return partsAfterId[3].split('&')[0];
     }
+  }
 
-    console.log(`Opportunity ID: ${opportunity}`);
-  
-    // Make a GET request to fetch items from the "Temporary" list
-    this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq '${opportunity}'`, SPHttpClient.configurations.v1)
+  private async fetchData(opportunity: string): Promise<IOpportunity | null> {
+    return this.spHttpClient.get(`${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('oneSfaRecordsList')/items?$filter=sfaLeadId eq '${opportunity}'`, SPHttpClient.configurations.v1)
       .then((response: SPHttpClientResponse) => {
         if (response.ok) {
           return response.json();
@@ -119,40 +165,18 @@ export default class ViewApplicationCustomizer
           throw Error("Failed to fetch data");
         }
       })
-      .then((responseData: any) => {
-        if (responseData.length === 0) {
-          // If the data is empty, throw an error
-          throw Error('No matching sfaLeadId found in the database.');
+      .then((data) => {
+        // If data is found, return it
+        if (data.value && data.value.length > 0) {
+          return data.value[0] as IOpportunity;
         }
-
-        console.log("Data from the REST Api call loaded: ", responseData);
-        const data: IOpportunity = responseData.value[0];
-        console.log(`Successfully loaded Opportunity: ${data.sfaLeadId}`, opportunity);
-
-        // Create or update the dynamic content
-        let injectedDiv = document.getElementById("InjectedExtensionDiv");
-
-        if (!injectedDiv) {
-          // If the div doesn't exist, create a new one
-          const targetElement = document.querySelector('.od-TopBar-item.od-TopBar-commandBar.od-TopBar-commandBar--suiteNavSearch');
-          if (targetElement) {
-            targetElement.insertAdjacentElement('afterend', this.generateInjectedDiv(data));
-            this.lastOpportunity = opportunity;
-          } else {
-            console.error("Target element not found. Cannot insert the custom div.");
-            this.lastOpportunity = '';
-          }
-        } else {
-          // If the div exists, update its content
-          if (opportunity !== this.lastOpportunity) {
-            injectedDiv = this.generateInjectedDiv(data);
-          }
-          this.lastOpportunity = opportunity;
-        }
+        // If no data is found, return null
+        return null;
       })
-      .catch((error: any) => {
-        this.removeInjectedExtensionDiv();
-        console.error(`Get request was not successful: ${error}`);
+      .catch((error) => {
+        console.error(error);
+        // In case of an error, return null
+        return null;
       });
   }
 
